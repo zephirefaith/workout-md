@@ -1,0 +1,5 @@
+- Chest press
+- Incline push-ups
+- Eccentric push-ups
+- Loaded stretching chest + shoulder
+  - [video](../videos/chest.mov)
