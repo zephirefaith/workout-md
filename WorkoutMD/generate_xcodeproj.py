@@ -49,6 +49,7 @@ U = {
     "FR_ASSETS":            "222222222222222222222219",
     "FR_INFOPLIST":         "22222222222222222222221A",
     "FR_HIKE":              "22222222222222222222221B",
+    "FR_OVERVIEW":          "22222222222222222222221C",
     # BuildFile UUIDs (one per source file)
     "BF_APP":               "33333333333333333333330A",
     "BF_CONTENT":           "33333333333333333333330B",
@@ -67,6 +68,7 @@ U = {
     "BF_SETTINGS":          "333333333333333333333318",
     "BF_ASSETS":            "333333333333333333333319",
     "BF_HIKE":              "33333333333333333333331A",
+    "BF_OVERVIEW":          "33333333333333333333331B",
 }
 
 # ---------------------------------------------------------------------------
@@ -90,6 +92,7 @@ SWIFT_FILES = [
     ("BF_WRITER",        "FR_WRITER",        "WorkoutMD/Services/MarkdownWriter.swift", "MarkdownWriter.swift"),
     ("BF_SETTINGS",      "FR_SETTINGS",      "WorkoutMD/Settings/SettingsView.swift",   "SettingsView.swift"),
     ("BF_HIKE",          "FR_HIKE",          "WorkoutMD/Views/HikeSessionView.swift",   "HikeSessionView.swift"),
+    ("BF_OVERVIEW",      "FR_OVERVIEW",      "WorkoutMD/Views/OverviewView.swift",      "OverviewView.swift"),
 ]
 
 def pbxproj():
