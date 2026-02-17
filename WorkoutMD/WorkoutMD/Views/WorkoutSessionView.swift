@@ -24,6 +24,7 @@ struct WorkoutSessionView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(sessionName)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
