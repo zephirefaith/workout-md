@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SetRowView: View {
     @Binding var set: WorkoutSet
-    @FocusState private var isWeightFocused: Bool
 
     var body: some View {
         HStack(spacing: 12) {
@@ -24,13 +23,6 @@ struct SetRowView: View {
                 .frame(minWidth: 80)
                 .strikethrough(set.isDone, color: .secondary)
                 .foregroundStyle(set.isDone ? .secondary : .primary)
-                .focused($isWeightFocused)
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") { isWeightFocused = false }
-                    }
-                }
 
             Spacer()
 

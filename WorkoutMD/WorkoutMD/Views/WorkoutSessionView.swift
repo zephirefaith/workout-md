@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct WorkoutSessionView: View {
     let templates: [WorkoutTemplate]
@@ -25,6 +26,17 @@ struct WorkoutSessionView: View {
         }
         .listStyle(.insetGrouped)
         .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil, from: nil, for: nil
+                    )
+                }
+            }
+        }
         .navigationTitle(sessionName)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
