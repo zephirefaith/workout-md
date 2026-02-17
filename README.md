@@ -56,7 +56,10 @@ Configure the folder names used inside your vault from the Settings screen (defa
 
 ## File format
 
-**Workout template** (`templates/w-chest-t.md`):
+### Workout template (`templates/w-chest-t.md`)
+
+Filename convention: `w-{slug}-t.md`. Only files matching this pattern are shown in the template picker.
+
 ```
 - Chest press
 - Incline push-ups
@@ -64,24 +67,61 @@ Configure the folder names used inside your vault from the Settings screen (defa
   - [video](../videos/chest.mov)
 ```
 
-**Completed workout** (`workouts/2026-02-13-chest.md`):
+Top-level `- Name` lines become exercises. Indented `  - [video](path)` lines attach a demo video to the preceding exercise.
+
+### Completed workout (`workouts/2026-02-13-chest.md`)
+
+Filename: `yyyy-MM-dd-{slug}.md` (ISO date, then slugified session name).
+
 ```markdown
 ---
+date: 2026-02-13
 categories:
   - "[[workouts]]"
-date: 2026-02-13
-template: chest
+muscles:
+  - "[[chest]]"
+effort: 7
 ---
 
-# Chest — 2026-02-13
+## Chest — Feb 13, 2026
 
-## Chest press
-| Set | Reps | Weight |
-|-----|------|--------|
-| 1   | 10   | 135    |
+### Chest press
+- [x] 135 × 10
+- [x] 135 × 8
+- [ ] bodyweight × 10
 ```
 
-**Daily journal** (`journals/2026-Feb-13.md`):
+Frontmatter fields: `date` (ISO), `categories`, `muscles` (list of `[[muscle]]` wikilinks), `effort` (integer 0–10).
+Body: `## {session} — {date}`, then `### {exercise}`, then `- [x/[ ]] weight × reps` (weight is `bodyweight` when empty).
+
+### Hike (`workouts/2026-02-13-hike.md`)
+
+Same frontmatter shape plus optional `distance` and `time` (minutes) fields. Muscles default to quads/hams/glutes.
+
+```markdown
+---
+date: 2026-02-13
+categories:
+  - "[[workouts]]"
+muscles:
+  - "[[quads]]"
+  - "[[hams]]"
+  - "[[glutes]]"
+effort: 6
+distance: 5.2km
+time: 75
+---
+
+## Hike — Feb 13, 2026
+
+- Distance: 5.2km
+- Time: 1h 15m
+```
+
+### Daily journal (`journals/2026-Feb-13.md`)
+
+Filename: `yyyy-MMM-dd.md` (Obsidian convention — three-letter month, NOT ISO).
+
 ```markdown
 ---
 categories:
@@ -92,7 +132,11 @@ habits:
 # Notes
 
 # Things I did Today
+
+![[workouts/2026-02-13-chest]]
 ```
+
+The app appends an embed line (`![[workouts/…]]`) to the daily note after saving a workout.
 
 ## Architecture
 
