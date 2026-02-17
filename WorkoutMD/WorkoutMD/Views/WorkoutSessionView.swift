@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct WorkoutSessionView: View {
     let templates: [WorkoutTemplate]
