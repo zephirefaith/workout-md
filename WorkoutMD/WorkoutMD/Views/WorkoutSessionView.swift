@@ -9,6 +9,7 @@ struct WorkoutSessionView: View {
     @State private var saveError: String? = nil
     @State private var saveSuccess = false
     @State private var showingEffortSheet = false
+    @State private var showingElapsedSheet = false
     @State private var effortValue: Int = 7
 
     // MARK: - Timers
@@ -62,9 +63,13 @@ struct WorkoutSessionView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Label(formatElapsed(elapsed), systemImage: "timer")
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                Button {
+                    showingElapsedSheet = true
+                } label: {
+                    Label(formatElapsed(elapsed), systemImage: "timer")
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -89,6 +94,10 @@ struct WorkoutSessionView: View {
                 Task { await saveWorkout() }
             }
             .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showingElapsedSheet) {
+            ElapsedTimerView(elapsed: elapsed, sessionName: sessionName)
+                .presentationDetents([.medium])
         }
         .alert("Save Error", isPresented: Binding(
             get: { saveError != nil },
@@ -233,6 +242,45 @@ struct EffortSheetView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Elapsed Timer Sheet
+
+struct ElapsedTimerView: View {
+    let elapsed: Int
+    let sessionName: String
+
+    private var hours: Int   { elapsed / 3600 }
+    private var minutes: Int { (elapsed % 3600) / 60 }
+    private var seconds: Int { elapsed % 60 }
+
+    private var timeString: String {
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Session Time")
+                .font(.headline)
+                .padding(.top, 28)
+            Text(sessionName)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            Text(timeString)
+                .font(.system(size: 72, weight: .thin, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.primary)
 
             Spacer()
         }
