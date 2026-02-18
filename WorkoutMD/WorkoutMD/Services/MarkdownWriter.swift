@@ -38,6 +38,18 @@ struct MarkdownWriter {
         return lines.joined(separator: "\n")
     }
 
+    /// YAML frontmatter block for a recovery file.
+    func recoveryFrontmatter(recoveryType: String, date: Date) -> String {
+        return [
+            "---",
+            "date: \(isoDateString(for: date))",
+            "categories:",
+            "  - \"[[workouts]]\"",
+            "type: recovery",
+            "---"
+        ].joined(separator: "\n")
+    }
+
     // MARK: - Body serialization
 
     /// Produces the markdown body for a template-based session (no frontmatter).
@@ -63,6 +75,11 @@ struct MarkdownWriter {
         }
 
         return lines.joined(separator: "\n")
+    }
+
+    /// Produces the markdown body for a recovery session (no frontmatter).
+    func serializeRecovery(recoveryType: String, date: Date) -> String {
+        return "## \(recoveryType) — \(formattedDate(date))\n"
     }
 
     /// Produces the markdown body for a hike (no frontmatter).
