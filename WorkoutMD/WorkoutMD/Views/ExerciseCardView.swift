@@ -3,12 +3,13 @@ import SwiftUI
 struct ExerciseCardView: View {
     @ObservedObject var exercise: Exercise
     var onRemove: (() -> Void)? = nil
+    var onSetDone: (() -> Void)? = nil
     @State private var showingVideo = false
 
     var body: some View {
         Section {
             ForEach($exercise.sets) { $set in
-                SetRowView(set: $set)
+                SetRowView(set: $set, onSetDone: onSetDone)
             }
             Button {
                 exercise.addSet()

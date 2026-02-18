@@ -11,6 +11,12 @@ struct WorkoutSessionView: View {
     @State private var showingEffortSheet = false
     @State private var effortValue: Int = 7
 
+    // MARK: - Timers
+    @State private var elapsed: Int = 0
+    @State private var restRemaining: Int = 0
+    private let restDuration = 90
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
     var sessionName: String {
         templates.map(\.displayName).joined(separator: " + ")
     }
@@ -20,11 +26,27 @@ struct WorkoutSessionView: View {
             ForEach(exercises) { exercise in
                 ExerciseCardView(exercise: exercise, onRemove: {
                     exercises.removeAll { $0.id == exercise.id }
+                }, onSetDone: {
+                    restRemaining = restDuration
                 })
             }
         }
         .listStyle(.insetGrouped)
         .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom) {
+            if restRemaining > 0 {
+                HStack {
+                    Image(systemName: "timer")
+                    Text("Rest  ·  \(formatRest(restRemaining))")
+                        .font(.headline.monospacedDigit())
+                    Spacer()
+                    Button("Skip") { restRemaining = 0 }
+                }
+                .padding(.horizontal, 20).padding(.vertical, 12)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal).padding(.bottom, 8)
+            }
+        }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -39,6 +61,11 @@ struct WorkoutSessionView: View {
         .navigationTitle(sessionName)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Label(formatElapsed(elapsed), systemImage: "timer")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showingEffortSheet = true
@@ -51,6 +78,10 @@ struct WorkoutSessionView: View {
                 }
                 .disabled(isSaving)
             }
+        }
+        .onReceive(ticker) { _ in
+            elapsed += 1
+            if restRemaining > 0 { restRemaining -= 1 }
         }
         .sheet(isPresented: $showingEffortSheet) {
             EffortSheetView(title: sessionName, effort: $effortValue) {
@@ -82,6 +113,16 @@ struct WorkoutSessionView: View {
         .animation(.easeInOut, value: saveSuccess)
     }
 
+    // MARK: - Timer formatting
+
+    private func formatElapsed(_ s: Int) -> String {
+        "\(s / 60):\(String(format: "%02d", s % 60))"
+    }
+
+    private func formatRest(_ s: Int) -> String {
+        "\(s / 60):\(String(format: "%02d", s % 60))"
+    }
+
     // MARK: - Save
 
     @MainActor
@@ -92,6 +133,7 @@ struct WorkoutSessionView: View {
         let writer  = MarkdownWriter()
         let today   = Date()
         let muscles = writer.muscleGroups(from: sessionName)
+        let durationMinutes = max(1, elapsed / 60)
 
         // Capture all values needed inside the background closure
         let workoutFileName   = writer.workoutFilename(sessionName: sessionName, date: today)
@@ -103,11 +145,13 @@ struct WorkoutSessionView: View {
                                    sessionName: sessionName,
                                    muscles: muscles,
                                    effort: effortValue,
-                                   date: today
+                                   date: today,
+                                   duration: durationMinutes
                                ) + "\n" + writer.serializeWorkout(
                                    templateName: sessionName,
                                    exercises: exercises,
-                                   date: today
+                                   date: today,
+                                   duration: durationMinutes
                                )
 
         do {
