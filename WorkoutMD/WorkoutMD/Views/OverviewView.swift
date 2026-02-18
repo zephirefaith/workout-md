@@ -25,18 +25,12 @@ struct OverviewView: View {
                 )
             } else {
                 List {
-                    ForEach(grouped, id: \.month) { section in
-                        Section(section.month) {
+                    ForEach(grouped, id: \.label) { section in
+                        Section(section.label) {
                             ForEach(section.items) { workout in
                                 WorkoutHistoryRow(workout: workout)
                             }
                         }
-                    }
-                    Section {
-                        Text(freshnessLabel)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .padding(.vertical, 2)
                     }
                 }
                 .listStyle(.insetGrouped)
@@ -47,45 +41,35 @@ struct OverviewView: View {
         .refreshable { await load() }
     }
 
-    // MARK: - Grouping
+    // MARK: - Grouping (ISO weeks, Mon–Sun)
 
-    private var grouped: [(month: String, items: [PastWorkout])] {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "MMMM yyyy"
-        var result: [(month: String, items: [PastWorkout])] = []
-        for w in workouts {
-            let m = fmt.string(from: w.date)
-            if let idx = result.firstIndex(where: { $0.month == m }) {
+    private var grouped: [(label: String, items: [PastWorkout])] {
+        var calendar = Calendar(identifier: .iso8601)
+        calendar.firstWeekday = 2 // Monday
+        var result: [(label: String, weekStart: Date, items: [PastWorkout])] = []
+        for w in workouts { // sorted newest-first
+            guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: w.date)?.start else { continue }
+            if let idx = result.firstIndex(where: { $0.weekStart == weekStart }) {
                 result[idx].items.append(w)
             } else {
-                result.append((month: m, items: [w]))
+                result.append((label: weekLabel(for: w.date, calendar: calendar), weekStart: weekStart, items: [w]))
             }
         }
-        return result
+        return result.map { (label: $0.label, items: $0.items) }
     }
 
-    // MARK: - Freshness
+    private func weekLabel(for date: Date, calendar: Calendar) -> String {
+        guard
+            let currentWeekStart = calendar.dateInterval(of: .weekOfYear, for: Date())?.start,
+            let dateWeekStart = calendar.dateInterval(of: .weekOfYear, for: date)?.start
+        else { return "" }
 
-    private var freshnessLabel: String {
-        // For each muscle, find its most recent workout (workouts is newest-first)
-        var lastSeen: [String: (date: Date, effort: Int?)] = [:]
-        for w in workouts {
-            for muscle in w.muscles where lastSeen[muscle] == nil {
-                lastSeen[muscle] = (w.date, w.effort)
-            }
+        let weeks = calendar.dateComponents([.weekOfYear], from: dateWeekStart, to: currentWeekStart).weekOfYear ?? 0
+        switch weeks {
+        case 0:  return "This week"
+        case 1:  return "Last week"
+        default: return "\(weeks) weeks ago"
         }
-
-        let calendar = Calendar.current
-        let now = Date()
-        let fresh = lastSeen.keys.sorted().filter { muscle in
-            let (date, effort) = lastSeen[muscle]!
-            let restDays = (effort ?? 0) > 6 ? 3 : 2
-            let daysSince = calendar.dateComponents([.day], from: date, to: now).day ?? 0
-            return daysSince >= restDays
-        }
-
-        if fresh.isEmpty { return "All muscle groups trained recently." }
-        return "Fresh today: " + fresh.map { $0.capitalized }.joined(separator: " · ")
     }
 
     // MARK: - Loading
@@ -104,12 +88,11 @@ struct OverviewView: View {
                 guard fileName.count > 10 else { return nil }
                 let dateStr = String(fileName.prefix(10))
                 guard let date = dateFmt.date(from: dateStr) else { return nil }
-                let (effort, muscles) = parseFrontmatter(fileName: fileName, folder: folder)
+                let effort = parseEffort(fileName: fileName, folder: folder)
                 return PastWorkout(
                     date: date,
                     displayName: workoutDisplayName(from: fileName),
                     effort: effort,
-                    muscles: muscles,
                     fileName: fileName
                 )
             }
@@ -129,41 +112,20 @@ struct OverviewView: View {
             .joined(separator: " ")
     }
 
-    private func parseFrontmatter(fileName: String, folder: String) -> (effort: Int?, muscles: [String]) {
-        guard let text = try? vaultService.readFile(relativePath: "\(folder)/\(fileName)") else {
-            return (nil, [])
-        }
+    private func parseEffort(fileName: String, folder: String) -> Int? {
+        guard let text = try? vaultService.readFile(relativePath: "\(folder)/\(fileName)") else { return nil }
         var inFrontmatter = false
-        var inMuscles = false
-        var effort: Int? = nil
-        var muscles: [String] = []
-
         for line in text.components(separatedBy: "\n") {
             if line == "---" {
                 if !inFrontmatter { inFrontmatter = true } else { break }
                 continue
             }
             guard inFrontmatter else { continue }
-
             if line.hasPrefix("effort:") {
-                inMuscles = false
-                let val = line.dropFirst("effort:".count).trimmingCharacters(in: .whitespaces)
-                effort = Int(val)
-            } else if line.hasPrefix("muscles:") {
-                inMuscles = true
-            } else if inMuscles {
-                let trimmed = line.trimmingCharacters(in: .whitespaces)
-                if trimmed.hasPrefix("- ") {
-                    let raw = trimmed.dropFirst(2).trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                    if raw.hasPrefix("[[") && raw.hasSuffix("]]") {
-                        muscles.append(String(raw.dropFirst(2).dropLast(2)))
-                    }
-                } else {
-                    inMuscles = false
-                }
+                return Int(line.dropFirst("effort:".count).trimmingCharacters(in: .whitespaces))
             }
         }
-        return (effort, muscles)
+        return nil
     }
 }
 
@@ -216,6 +178,5 @@ private struct PastWorkout: Identifiable {
     let date: Date
     let displayName: String
     let effort: Int?
-    let muscles: [String]
     let fileName: String
 }
