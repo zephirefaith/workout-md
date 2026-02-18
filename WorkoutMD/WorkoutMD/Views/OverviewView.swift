@@ -88,11 +88,12 @@ struct OverviewView: View {
                 guard fileName.count > 10 else { return nil }
                 let dateStr = String(fileName.prefix(10))
                 guard let date = dateFmt.date(from: dateStr) else { return nil }
-                let effort = parseEffort(fileName: fileName, folder: folder)
+                let (effort, isRecovery) = parseSessionMeta(fileName: fileName, folder: folder)
                 return PastWorkout(
                     date: date,
                     displayName: workoutDisplayName(from: fileName),
                     effort: effort,
+                    isRecovery: isRecovery,
                     fileName: fileName
                 )
             }
@@ -112,9 +113,11 @@ struct OverviewView: View {
             .joined(separator: " ")
     }
 
-    private func parseEffort(fileName: String, folder: String) -> Int? {
-        guard let text = try? vaultService.readFile(relativePath: "\(folder)/\(fileName)") else { return nil }
+    private func parseSessionMeta(fileName: String, folder: String) -> (effort: Int?, isRecovery: Bool) {
+        guard let text = try? vaultService.readFile(relativePath: "\(folder)/\(fileName)") else { return (nil, false) }
         var inFrontmatter = false
+        var effort: Int? = nil
+        var isRecovery = false
         for line in text.components(separatedBy: "\n") {
             if line == "---" {
                 if !inFrontmatter { inFrontmatter = true } else { break }
@@ -122,10 +125,12 @@ struct OverviewView: View {
             }
             guard inFrontmatter else { continue }
             if line.hasPrefix("effort:") {
-                return Int(line.dropFirst("effort:".count).trimmingCharacters(in: .whitespaces))
+                effort = Int(line.dropFirst("effort:".count).trimmingCharacters(in: .whitespaces))
+            } else if line == "type: recovery" {
+                isRecovery = true
             }
         }
-        return nil
+        return (effort, isRecovery)
     }
 }
 
@@ -150,7 +155,14 @@ private struct WorkoutHistoryRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            if let effort = workout.effort {
+            if workout.isRecovery {
+                Text("Recovery")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.purple, in: Capsule())
+            } else if let effort = workout.effort {
                 Text("\(effort)/10")
                     .font(.caption.bold())
                     .foregroundStyle(.white)
@@ -178,5 +190,6 @@ private struct PastWorkout: Identifiable {
     let date: Date
     let displayName: String
     let effort: Int?
+    let isRecovery: Bool
     let fileName: String
 }

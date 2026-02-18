@@ -8,6 +8,7 @@ struct TemplatePickerView: View {
     @State private var selectedIDs: Set<UUID> = []
     @State private var navigateToSession = false
     @State private var navigateToHike = false
+    @State private var navigateToRecovery = false
 
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
@@ -51,6 +52,12 @@ struct TemplatePickerView: View {
                         HikeCard()
                     }
                     .buttonStyle(.plain)
+                    Button {
+                        navigateToRecovery = true
+                    } label: {
+                        RecoveryCard()
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding()
 
@@ -69,6 +76,9 @@ struct TemplatePickerView: View {
         }
         .navigationDestination(isPresented: $navigateToHike) {
             HikeSessionView()
+        }
+        .navigationDestination(isPresented: $navigateToRecovery) {
+            RecoverySessionView()
         }
         .safeAreaInset(edge: .bottom) {
             Button {
@@ -181,6 +191,26 @@ private struct TemplateCard: View {
         if lower.contains("abs") || lower.contains("core") { return "figure.core.training" }
         if lower.contains("ham") || lower.contains("glute") { return "figure.run" }
         return "dumbbell"
+    }
+}
+
+// MARK: - Recovery Card
+
+private struct RecoveryCard: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 16)
+            .fill(.purple.gradient)
+            .frame(height: 100)
+            .overlay {
+                VStack(spacing: 8) {
+                    Image(systemName: "figure.mind.and.body")
+                        .font(.title2)
+                    Text("Recovery")
+                        .font(.headline)
+                }
+                .foregroundStyle(.white)
+                .padding(12)
+            }
     }
 }
 
