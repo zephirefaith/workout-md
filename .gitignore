@@ -8,6 +8,9 @@ xcuserdata/
 *.xcuserstate
 *.xcscmblueprint
 
+# Generated Xcode project (regenerate with: cd WorkoutMD && python3 generate_xcodeproj.py)
+*.pbxproj
+
 # Build products
 build/
 DerivedData/
