@@ -67,14 +67,22 @@ struct OverviewView: View {
     // MARK: - Freshness
 
     private var freshnessLabel: String {
-        let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date()
-        let recentMuscles = Set(
-            workouts
-                .filter { $0.date >= twoDaysAgo }
-                .flatMap { $0.muscles }
-        )
-        let allMuscles = Array(Set(workouts.flatMap { $0.muscles })).sorted()
-        let fresh = allMuscles.filter { !recentMuscles.contains($0) }
+        // For each muscle, find its most recent workout (workouts is newest-first)
+        var lastSeen: [String: (date: Date, effort: Int?)] = [:]
+        for w in workouts {
+            for muscle in w.muscles where lastSeen[muscle] == nil {
+                lastSeen[muscle] = (w.date, w.effort)
+            }
+        }
+
+        let calendar = Calendar.current
+        let now = Date()
+        let fresh = lastSeen.keys.sorted().filter { muscle in
+            let (date, effort) = lastSeen[muscle]!
+            let restDays = (effort ?? 0) > 6 ? 3 : 2
+            let daysSince = calendar.dateComponents([.day], from: date, to: now).day ?? 0
+            return daysSince >= restDays
+        }
 
         if fresh.isEmpty { return "All muscle groups trained recently." }
         return "Fresh today: " + fresh.map { $0.capitalized }.joined(separator: " · ")
