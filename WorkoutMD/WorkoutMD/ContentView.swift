@@ -8,15 +8,23 @@ struct ContentView: View {
             if vaultService.vaultURL == nil {
                 VaultSetupView()
             } else {
-                NavigationStack {
-                    TemplatePickerView()
-                        .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                NavigationLink(destination: SettingsView()) {
-                                    Image(systemName: "gear")
+                TabView {
+                    NavigationStack {
+                        TemplatePickerView()
+                            .toolbar {
+                                ToolbarItem(placement: .topBarTrailing) {
+                                    NavigationLink(destination: SettingsView()) {
+                                        Image(systemName: "gear")
+                                    }
                                 }
                             }
-                        }
+                    }
+                    .tabItem { Label("Home", systemImage: "house") }
+
+                    NavigationStack {
+                        OverviewView()
+                    }
+                    .tabItem { Label("Overview", systemImage: "calendar") }
                 }
             }
         }

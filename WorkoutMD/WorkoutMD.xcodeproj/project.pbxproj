@@ -23,6 +23,7 @@
 		333333333333333333333317 /* MarkdownWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222217 /* MarkdownWriter.swift */; };
 		333333333333333333333318 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222218 /* SettingsView.swift */; };
 		33333333333333333333331A /* HikeSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22222222222222222222221B /* HikeSessionView.swift */; };
+		33333333333333333333331B /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22222222222222222222221C /* OverviewView.swift */; };
 		333333333333333333333319 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222219 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -44,6 +45,7 @@
 		222222222222222222222217 /* MarkdownWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownWriter.swift; sourceTree = "<group>"; };
 		222222222222222222222218 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		22222222222222222222221B /* HikeSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HikeSessionView.swift; sourceTree = "<group>"; };
+		22222222222222222222221C /* OverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewView.swift; sourceTree = "<group>"; };
 		222222222222222222222219 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -108,6 +110,7 @@
 				222222222222222222222213 /* SetRowView.swift */,
 				222222222222222222222214 /* VideoPlayerView.swift */,
 				22222222222222222222221B /* HikeSessionView.swift */,
+				22222222222222222222221C /* OverviewView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -215,6 +218,7 @@
 				333333333333333333333317 /* MarkdownWriter.swift in Sources */,
 				333333333333333333333318 /* SettingsView.swift in Sources */,
 				33333333333333333333331A /* HikeSessionView.swift in Sources */,
+				33333333333333333333331B /* OverviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
