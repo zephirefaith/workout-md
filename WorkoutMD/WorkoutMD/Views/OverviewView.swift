@@ -202,8 +202,8 @@ private struct WorkoutHistoryRow: View {
 
     private func effortColor(_ effort: Int) -> Color {
         switch effort {
-        case 0...4: return .green
-        case 5...7: return .orange
+        case 0...3: return .green
+        case 4...6: return .orange
         default:    return .red
         }
     }
