@@ -121,8 +121,15 @@ struct WorkoutSessionView: View {
         }
         .onAppear {
             exercises = templates.flatMap(\.exercises)
+            let lastWeights = vaultService.readLastWeights()
             for exercise in exercises where exercise.sets.isEmpty {
-                exercise.addSet()
+                if let last = lastWeights[exercise.name] {
+                    // Pre-seed the first set with last-used weight & reps
+                    let seededSet = WorkoutSet(weight: last.weight, reps: last.reps, isDone: false)
+                    exercise.sets.append(seededSet)
+                } else {
+                    exercise.addSet()
+                }
             }
         }
         .animation(.easeInOut, value: saveSuccess)
@@ -165,6 +172,25 @@ struct WorkoutSessionView: View {
         let journalsFolder    = vaultService.journalsFolder
         let templatesFolder   = vaultService.templatesFolder
         let dailyNoteFilename = writer.dailyNoteFilename(for: today)
+        // Capture last-used weights from completed sets for persistence
+        let updatedLastWeights: LastWeightsStore = {
+            let today = ISO8601DateFormatter().string(from: Date()).prefix(10).description
+            var store = vaultService.readLastWeights()
+            for exercise in exercises {
+                // Use the last completed set, fall back to last set if none marked done
+                let completedSets = exercise.sets.filter { $0.isDone }
+                if let last = completedSets.last ?? exercise.sets.last,
+                   !last.weight.trimmingCharacters(in: .whitespaces).isEmpty {
+                    store[exercise.name] = LastWeight(
+                        weight: last.weight,
+                        reps: last.reps,
+                        updatedAt: today
+                    )
+                }
+            }
+            return store
+        }()
+
         let workoutContent   = writer.workoutFrontmatter(
                                    sessionName: sessionName,
                                    muscles: muscles,
@@ -213,6 +239,18 @@ struct WorkoutSessionView: View {
                     withIntermediateDirectories: true
                 )
                 try updated.write(to: dailyNoteURL, atomically: true, encoding: .utf8)
+
+                // 4. Persist last-used weights for next session pre-fill
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                let weightsData = try encoder.encode(updatedLastWeights)
+                let weightsContent = String(data: weightsData, encoding: .utf8) ?? "{}"
+                let weightsURL = vault.appendingPathComponent("_app_data/last-weights.json")
+                try FileManager.default.createDirectory(
+                    at: weightsURL.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try weightsContent.write(to: weightsURL, atomically: true, encoding: .utf8)
             }
 
             saveSuccess = true

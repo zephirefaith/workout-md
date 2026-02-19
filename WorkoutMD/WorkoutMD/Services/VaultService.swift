@@ -129,6 +129,29 @@ class VaultService: ObservableObject {
         guard let vault = vaultURL else { return nil }
         return vault.appendingPathComponent(relativePath)
     }
+
+    // MARK: - Last Weights (app data)
+
+    private let lastWeightsPath = "_app_data/last-weights.json"
+
+    /// Reads the last-used weights store from `_app_data/last-weights.json`.
+    /// Returns an empty dictionary if the file doesn't exist yet.
+    func readLastWeights() -> LastWeightsStore {
+        guard let content = try? readFile(relativePath: lastWeightsPath),
+              let data = content.data(using: .utf8),
+              let store = try? JSONDecoder().decode(LastWeightsStore.self, from: data)
+        else { return [:] }
+        return store
+    }
+
+    /// Writes the last-used weights store to `_app_data/last-weights.json`.
+    func writeLastWeights(_ store: LastWeightsStore) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(store)
+        let content = String(data: data, encoding: .utf8) ?? "{}"
+        try writeFile(relativePath: lastWeightsPath, content: content)
+    }
 }
 
 // MARK: - Errors
