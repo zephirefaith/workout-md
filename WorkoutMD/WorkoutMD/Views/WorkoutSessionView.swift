@@ -9,7 +9,17 @@ struct WorkoutSessionView: View {
     @State private var saveError: String? = nil
     @State private var saveSuccess = false
     @State private var showingEffortSheet = false
+    @State private var showingElapsedSheet = false
     @State private var effortValue: Int = 7
+
+    // MARK: - Timers
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var elapsed: Int = 0
+    @State private var restRemaining: Int = 0
+    @State private var sessionStart = Date()
+    @State private var restStart: Date? = nil
+    private let restDuration = 90
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var sessionName: String {
         templates.map(\.displayName).joined(separator: " + ")
@@ -20,11 +30,28 @@ struct WorkoutSessionView: View {
             ForEach(exercises) { exercise in
                 ExerciseCardView(exercise: exercise, onRemove: {
                     exercises.removeAll { $0.id == exercise.id }
+                }, onSetDone: {
+                    restStart = Date()
+                    restRemaining = restDuration
                 })
             }
         }
         .listStyle(.insetGrouped)
         .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom) {
+            if restRemaining > 0 {
+                HStack {
+                    Image(systemName: "timer")
+                    Text("Rest  ·  \(formatRest(restRemaining))")
+                        .font(.headline.monospacedDigit())
+                    Spacer()
+                    Button("Skip") { restStart = nil; restRemaining = 0 }
+                }
+                .padding(.horizontal, 20).padding(.vertical, 12)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal).padding(.bottom, 8)
+            }
+        }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -39,6 +66,15 @@ struct WorkoutSessionView: View {
         .navigationTitle(sessionName)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    showingElapsedSheet = true
+                } label: {
+                    Label(formatElapsed(elapsed), systemImage: "timer")
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showingEffortSheet = true
@@ -52,12 +88,22 @@ struct WorkoutSessionView: View {
                 .disabled(isSaving)
             }
         }
+        .onReceive(ticker) { _ in
+            updateTimers()
+        }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { updateTimers() }
+        }
         .sheet(isPresented: $showingEffortSheet) {
             EffortSheetView(title: sessionName, effort: $effortValue) {
                 showingEffortSheet = false
                 Task { await saveWorkout() }
             }
             .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showingElapsedSheet) {
+            ElapsedTimerView(elapsed: elapsed, sessionName: sessionName)
+                .presentationDetents([.medium])
         }
         .alert("Save Error", isPresented: Binding(
             get: { saveError != nil },
@@ -82,6 +128,25 @@ struct WorkoutSessionView: View {
         .animation(.easeInOut, value: saveSuccess)
     }
 
+    // MARK: - Timer logic
+
+    private func updateTimers() {
+        elapsed = Int(Date().timeIntervalSince(sessionStart))
+        if let start = restStart {
+            let remaining = restDuration - Int(Date().timeIntervalSince(start))
+            restRemaining = max(0, remaining)
+            if restRemaining == 0 { restStart = nil }
+        }
+    }
+
+    private func formatElapsed(_ s: Int) -> String {
+        "\(s / 60):\(String(format: "%02d", s % 60))"
+    }
+
+    private func formatRest(_ s: Int) -> String {
+        "\(s / 60):\(String(format: "%02d", s % 60))"
+    }
+
     // MARK: - Save
 
     @MainActor
@@ -92,6 +157,7 @@ struct WorkoutSessionView: View {
         let writer  = MarkdownWriter()
         let today   = Date()
         let muscles = writer.muscleGroups(from: sessionName)
+        let durationMinutes = max(1, elapsed / 60)
 
         // Capture all values needed inside the background closure
         let workoutFileName   = writer.workoutFilename(sessionName: sessionName, date: today)
@@ -103,11 +169,13 @@ struct WorkoutSessionView: View {
                                    sessionName: sessionName,
                                    muscles: muscles,
                                    effort: effortValue,
-                                   date: today
+                                   date: today,
+                                   duration: durationMinutes
                                ) + "\n" + writer.serializeWorkout(
                                    templateName: sessionName,
                                    exercises: exercises,
-                                   date: today
+                                   date: today,
+                                   duration: durationMinutes
                                )
 
         do {
@@ -189,6 +257,45 @@ struct EffortSheetView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Elapsed Timer Sheet
+
+struct ElapsedTimerView: View {
+    let elapsed: Int
+    let sessionName: String
+
+    private var hours: Int   { elapsed / 3600 }
+    private var minutes: Int { (elapsed % 3600) / 60 }
+    private var seconds: Int { elapsed % 60 }
+
+    private var timeString: String {
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Session Time")
+                .font(.headline)
+                .padding(.top, 28)
+            Text(sessionName)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            Text(timeString)
+                .font(.system(size: 72, weight: .thin, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.primary)
 
             Spacer()
         }

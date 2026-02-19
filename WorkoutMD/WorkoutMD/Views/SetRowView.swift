@@ -2,12 +2,14 @@ import SwiftUI
 
 struct SetRowView: View {
     @Binding var set: WorkoutSet
+    var onSetDone: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 12) {
             // Checkbox
             Button {
                 set.isDone.toggle()
+                if set.isDone { onSetDone?() }
             } label: {
                 Image(systemName: set.isDone ? "checkmark.square.fill" : "square")
                     .foregroundStyle(set.isDone ? .green : .secondary)

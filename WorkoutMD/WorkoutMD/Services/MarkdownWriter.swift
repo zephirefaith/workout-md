@@ -5,18 +5,20 @@ struct MarkdownWriter {
     // MARK: - Frontmatter
 
     /// YAML frontmatter block for a template-based workout file.
-    func workoutFrontmatter(sessionName: String, muscles: [String], effort: Int, date: Date) -> String {
+    func workoutFrontmatter(sessionName: String, muscles: [String], effort: Int, date: Date, duration: Int = 0) -> String {
         let muscleLines = muscles.map { "  - \"[[\($0)]]\"" }.joined(separator: "\n")
-        return """
-        ---
-        date: \(isoDateString(for: date))
-        categories:
-          - "[[workouts]]"
-        muscles:
-        \(muscleLines)
-        effort: \(effort)
-        ---
-        """
+        var lines = [
+            "---",
+            "date: \(isoDateString(for: date))",
+            "categories:",
+            "  - \"[[workouts]]\"",
+            "muscles:",
+            muscleLines,
+            "effort: \(effort)"
+        ]
+        if duration > 0 { lines.append("duration: \(duration)") }
+        lines.append("---")
+        return lines.joined(separator: "\n")
     }
 
     /// YAML frontmatter block for a hike file.
@@ -53,11 +55,12 @@ struct MarkdownWriter {
     // MARK: - Body serialization
 
     /// Produces the markdown body for a template-based session (no frontmatter).
-    func serializeWorkout(templateName: String, exercises: [Exercise], date: Date) -> String {
+    func serializeWorkout(templateName: String, exercises: [Exercise], date: Date, duration: Int = 0) -> String {
         let dateStr = formattedDate(date)
         var lines: [String] = []
 
         lines.append("## \(templateName) — \(dateStr)")
+        if duration > 0 { lines.append("- Duration: \(formatMinutes(duration))") }
         lines.append("")
 
         for exercise in exercises {
