@@ -13,8 +13,11 @@ struct WorkoutSessionView: View {
     @State private var effortValue: Int = 7
 
     // MARK: - Timers
+    @Environment(\.scenePhase) private var scenePhase
     @State private var elapsed: Int = 0
     @State private var restRemaining: Int = 0
+    @State private var sessionStart = Date()
+    @State private var restStart: Date? = nil
     private let restDuration = 90
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -28,6 +31,7 @@ struct WorkoutSessionView: View {
                 ExerciseCardView(exercise: exercise, onRemove: {
                     exercises.removeAll { $0.id == exercise.id }
                 }, onSetDone: {
+                    restStart = Date()
                     restRemaining = restDuration
                 })
             }
@@ -41,7 +45,7 @@ struct WorkoutSessionView: View {
                     Text("Rest  ·  \(formatRest(restRemaining))")
                         .font(.headline.monospacedDigit())
                     Spacer()
-                    Button("Skip") { restRemaining = 0 }
+                    Button("Skip") { restStart = nil; restRemaining = 0 }
                 }
                 .padding(.horizontal, 20).padding(.vertical, 12)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
@@ -85,8 +89,10 @@ struct WorkoutSessionView: View {
             }
         }
         .onReceive(ticker) { _ in
-            elapsed += 1
-            if restRemaining > 0 { restRemaining -= 1 }
+            updateTimers()
+        }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { updateTimers() }
         }
         .sheet(isPresented: $showingEffortSheet) {
             EffortSheetView(title: sessionName, effort: $effortValue) {
@@ -122,7 +128,16 @@ struct WorkoutSessionView: View {
         .animation(.easeInOut, value: saveSuccess)
     }
 
-    // MARK: - Timer formatting
+    // MARK: - Timer logic
+
+    private func updateTimers() {
+        elapsed = Int(Date().timeIntervalSince(sessionStart))
+        if let start = restStart {
+            let remaining = restDuration - Int(Date().timeIntervalSince(start))
+            restRemaining = max(0, remaining)
+            if restRemaining == 0 { restStart = nil }
+        }
+    }
 
     private func formatElapsed(_ s: Int) -> String {
         "\(s / 60):\(String(format: "%02d", s % 60))"
