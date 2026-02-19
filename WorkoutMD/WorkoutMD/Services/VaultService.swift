@@ -132,7 +132,7 @@ class VaultService: ObservableObject {
 
     // MARK: - Last Weights (app data)
 
-    private let lastWeightsPath = "_app_data/last-weights.json"
+    private let lastWeightsPath = ".obsidian/last-weights.json"
 
     /// Reads the last-used weights store from `_app_data/last-weights.json`.
     /// Returns an empty dictionary if the file doesn't exist yet.

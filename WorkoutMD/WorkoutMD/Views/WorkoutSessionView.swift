@@ -245,7 +245,7 @@ struct WorkoutSessionView: View {
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 let weightsData = try encoder.encode(updatedLastWeights)
                 let weightsContent = String(data: weightsData, encoding: .utf8) ?? "{}"
-                let weightsURL = vault.appendingPathComponent("_app_data/last-weights.json")
+                let weightsURL = vault.appendingPathComponent(".obsidian/last-weights.json")
                 try FileManager.default.createDirectory(
                     at: weightsURL.deletingLastPathComponent(),
                     withIntermediateDirectories: true
