@@ -51,6 +51,7 @@ U = {
     "FR_HIKE":              "22222222222222222222221B",
     "FR_OVERVIEW":          "22222222222222222222221C",
     "FR_RECOVERY":          "22222222222222222222221D",
+    "FR_LASTWEIGHT":        "22222222222222222222221E",
     # BuildFile UUIDs (one per source file)
     "BF_APP":               "33333333333333333333330A",
     "BF_CONTENT":           "33333333333333333333330B",
@@ -71,6 +72,7 @@ U = {
     "BF_HIKE":              "33333333333333333333331A",
     "BF_OVERVIEW":          "33333333333333333333331B",
     "BF_RECOVERY":          "33333333333333333333331C",
+    "BF_LASTWEIGHT":        "33333333333333333333331D",
 }
 
 # ---------------------------------------------------------------------------
@@ -96,6 +98,7 @@ SWIFT_FILES = [
     ("BF_HIKE",          "FR_HIKE",          "WorkoutMD/Views/HikeSessionView.swift",   "HikeSessionView.swift"),
     ("BF_OVERVIEW",      "FR_OVERVIEW",      "WorkoutMD/Views/OverviewView.swift",      "OverviewView.swift"),
     ("BF_RECOVERY",      "FR_RECOVERY",      "WorkoutMD/Views/RecoverySessionView.swift","RecoverySessionView.swift"),
+    ("BF_LASTWEIGHT",    "FR_LASTWEIGHT",    "WorkoutMD/Models/LastWeight.swift",         "LastWeight.swift"),
 ]
 
 def pbxproj():
