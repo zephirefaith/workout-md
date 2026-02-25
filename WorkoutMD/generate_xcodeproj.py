@@ -52,6 +52,8 @@ U = {
     "FR_OVERVIEW":          "22222222222222222222221C",
     "FR_RECOVERY":          "22222222222222222222221D",
     "FR_LASTWEIGHT":        "22222222222222222222221E",
+    "FR_EXERCISE_PROGRESSION": "22222222222222222222221F",
+    "FR_WORKOUT_DETAIL":       "222222222222222222222220",
     # BuildFile UUIDs (one per source file)
     "BF_APP":               "33333333333333333333330A",
     "BF_CONTENT":           "33333333333333333333330B",
@@ -73,6 +75,8 @@ U = {
     "BF_OVERVIEW":          "33333333333333333333331B",
     "BF_RECOVERY":          "33333333333333333333331C",
     "BF_LASTWEIGHT":        "33333333333333333333331D",
+    "BF_EXERCISE_PROGRESSION": "33333333333333333333331E",
+    "BF_WORKOUT_DETAIL":       "33333333333333333333331F",
 }
 
 # ---------------------------------------------------------------------------
@@ -98,7 +102,9 @@ SWIFT_FILES = [
     ("BF_HIKE",          "FR_HIKE",          "WorkoutMD/Views/HikeSessionView.swift",   "HikeSessionView.swift"),
     ("BF_OVERVIEW",      "FR_OVERVIEW",      "WorkoutMD/Views/OverviewView.swift",      "OverviewView.swift"),
     ("BF_RECOVERY",      "FR_RECOVERY",      "WorkoutMD/Views/RecoverySessionView.swift","RecoverySessionView.swift"),
-    ("BF_LASTWEIGHT",    "FR_LASTWEIGHT",    "WorkoutMD/Models/LastWeight.swift",         "LastWeight.swift"),
+    ("BF_LASTWEIGHT",    "FR_LASTWEIGHT",    "WorkoutMD/Models/LastWeight.swift",             "LastWeight.swift"),
+    ("BF_EXERCISE_PROGRESSION", "FR_EXERCISE_PROGRESSION", "WorkoutMD/Views/ExerciseProgressionView.swift", "ExerciseProgressionView.swift"),
+    ("BF_WORKOUT_DETAIL",       "FR_WORKOUT_DETAIL",       "WorkoutMD/Views/WorkoutDetailView.swift",        "WorkoutDetailView.swift"),
 ]
 
 def pbxproj():

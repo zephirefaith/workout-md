@@ -5,6 +5,7 @@ struct ExerciseCardView: View {
     var onRemove: (() -> Void)? = nil
     var onSetDone: (() -> Void)? = nil
     @State private var showingVideo = false
+    @State private var showingProgression = false
 
     var body: some View {
         Section {
@@ -20,10 +21,15 @@ struct ExerciseCardView: View {
             }
         } header: {
             HStack {
-                Text(exercise.name)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .textCase(nil)
+                Button {
+                    showingProgression = true
+                } label: {
+                    Text(exercise.name)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .textCase(nil)
+                }
+                .buttonStyle(.plain)
                 Spacer()
                 if exercise.videoURL != nil {
                     Button {
@@ -47,6 +53,11 @@ struct ExerciseCardView: View {
         .sheet(isPresented: $showingVideo) {
             if let url = exercise.videoURL {
                 VideoPlayerView(url: url)
+            }
+        }
+        .sheet(isPresented: $showingProgression) {
+            NavigationStack {
+                ExerciseProgressionView(exerciseName: exercise.name)
             }
         }
     }
