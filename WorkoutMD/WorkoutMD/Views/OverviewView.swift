@@ -28,7 +28,13 @@ struct OverviewView: View {
                     ForEach(grouped, id: \.label) { section in
                         Section(section.label) {
                             ForEach(section.items) { workout in
-                                WorkoutHistoryRow(workout: workout)
+                                NavigationLink(destination: WorkoutDetailView(
+                                    fileName: workout.fileName,
+                                    displayName: workout.displayName,
+                                    date: workout.date
+                                )) {
+                                    WorkoutHistoryRow(workout: workout)
+                                }
                             }
                         }
                     }

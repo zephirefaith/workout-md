@@ -1,6 +1,39 @@
 import Foundation
 
+struct ParsedSet {
+    var weight: Double?   // nil = bodyweight/unknown
+    var reps: Int
+}
+
 struct MarkdownParser {
+
+    // MARK: - History parsing
+
+    /// Returns all sets logged for a named exercise in a saved workout file body.
+    func parseSets(from text: String, forExercise exerciseName: String) -> [ParsedSet] {
+        var result: [ParsedSet] = []
+        var inTarget = false
+        for line in text.components(separatedBy: "\n") {
+            if line.hasPrefix("### ") {
+                inTarget = line.dropFirst(4).trimmingCharacters(in: .whitespaces) == exerciseName
+                continue
+            }
+            if line.hasPrefix("## ") { inTarget = false; continue }
+            guard inTarget, line.hasPrefix("- [") else { continue }
+            guard let bracketClose = line.firstIndex(of: "]"),
+                  line.index(after: bracketClose) < line.endIndex else { continue }
+            let content = String(line[line.index(bracketClose, offsetBy: 2)...]).trimmingCharacters(in: .whitespaces)
+            let parts = content.components(separatedBy: "×")
+            guard parts.count >= 2,
+                  let reps = Int(parts[1].trimmingCharacters(in: .whitespaces)) else { continue }
+            let weightStr = parts[0].trimmingCharacters(in: .whitespaces)
+            let lower = weightStr.lowercased()
+            let weight: Double? = (lower.isEmpty || lower == "bodyweight" || lower == "bw") ? nil
+                : Double(weightStr.filter { $0.isNumber || $0 == "." })
+            result.append(ParsedSet(weight: weight, reps: reps))
+        }
+        return result
+    }
 
     // MARK: - Template parsing
 
