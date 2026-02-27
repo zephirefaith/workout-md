@@ -4,7 +4,8 @@ import Charts
 struct ExerciseDataPoint: Identifiable {
     var id = UUID()
     var date: Date
-    var maxWeight: Double
+    var maxWeight: Double?  // nil = bodyweight session
+    var maxReps: Int
 }
 
 struct ExerciseProgressionView: View {
@@ -13,6 +14,11 @@ struct ExerciseProgressionView: View {
     @State private var dataPoints: [ExerciseDataPoint] = []
     @State private var isLoading = true
 
+    /// True when no session has a numeric weight — chart switches to reps axis.
+    private var usesReps: Bool {
+        !dataPoints.contains { $0.maxWeight != nil }
+    }
+
     var body: some View {
         Group {
             if isLoading {
@@ -20,21 +26,35 @@ struct ExerciseProgressionView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if dataPoints.isEmpty {
                 ContentUnavailableView(
-                    "No weight data",
+                    "No data yet",
                     systemImage: "chart.line.uptrend.xyaxis",
-                    description: Text("Complete a session with numeric weights to see progression.")
+                    description: Text("Complete a session with this exercise to see progression.")
                 )
-            } else {
+            } else if usesReps {
                 Chart(dataPoints) { pt in
                     LineMark(
                         x: .value("Date", pt.date),
-                        y: .value("Weight", pt.maxWeight)
+                        y: .value("Reps", pt.maxReps)
                     )
                     PointMark(
                         x: .value("Date", pt.date),
-                        y: .value("Weight", pt.maxWeight)
+                        y: .value("Reps", pt.maxReps)
                     )
                 }
+                .chartYAxisLabel("Reps")
+                .padding()
+            } else {
+                Chart(dataPoints.filter { $0.maxWeight != nil }) { pt in
+                    LineMark(
+                        x: .value("Date", pt.date),
+                        y: .value("Weight", pt.maxWeight!)
+                    )
+                    PointMark(
+                        x: .value("Date", pt.date),
+                        y: .value("Weight", pt.maxWeight!)
+                    )
+                }
+                .chartYAxisLabel("Weight")
                 .padding()
             }
         }
@@ -57,9 +77,11 @@ struct ExerciseProgressionView: View {
             guard fileName.count > 10,
                   let date = dateFmt.date(from: String(fileName.prefix(10))),
                   let text = try? vaultService.readFile(relativePath: "\(folder)/\(fileName)") else { continue }
-            let weights = parser.parseSets(from: text, forExercise: exerciseName).compactMap { $0.weight }
-            guard let maxWeight = weights.max() else { continue }
-            points.append(ExerciseDataPoint(date: date, maxWeight: maxWeight))
+            let sets = parser.parseSets(from: text, forExercise: exerciseName)
+            guard !sets.isEmpty else { continue }
+            let maxWeight = sets.compactMap { $0.weight }.max()
+            let maxReps = sets.map { $0.reps }.max() ?? 0
+            points.append(ExerciseDataPoint(date: date, maxWeight: maxWeight, maxReps: maxReps))
         }
         dataPoints = points.sorted { $0.date < $1.date }
     }
